@@ -85,12 +85,8 @@
 
                 <form id="login-form" class="flex flex-col gap-5">
                     <div class="flex flex-col gap-2">
-                        <label class="text-xs uppercase tracking-wider text-gray-400 font-medium">Username</label>
-                        <input type="text" id="login-username" required autocomplete="username" autocapitalize="none" placeholder="admin" class="field">
-                    </div>
-                    <div class="flex flex-col gap-2">
                         <label class="text-xs uppercase tracking-wider text-gray-400 font-medium">Password</label>
-                        <input type="password" id="login-password" required autocomplete="current-password" class="field">
+                        <input type="password" id="login-password" required autocomplete="current-password" autofocus class="field">
                     </div>
                     <button type="submit" id="login-btn" class="btn-glow w-full py-3 text-sm uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 mt-2">
                         <span>Sign In</span>
@@ -266,15 +262,12 @@
         let editingId = null;
         let cachedProducts = [];
 
-        // Supabase Auth needs an email under the hood, but the login screen only
-        // asks for a plain "Username" (e.g. "admin"). This fixed, never-emailed
-        // domain turns that into a valid-looking email Supabase will accept —
-        // you never see or type this part yourself.
-        const USERNAME_DOMAIN = 'senegalinteriordesign.local';
-        function usernameToEmail(username) {
-            const trimmed = username.trim().toLowerCase();
-            return trimmed.includes('@') ? trimmed : trimmed + '@' + USERNAME_DOMAIN;
-        }
+        // Supabase Auth always needs an email under the hood, even though the login
+        // screen only asks for a password. This fixed, never-emailed address is used
+        // silently — it must match the email on the one admin account you created in
+        // Supabase (Authentication -> Users). If you ever change that account's email,
+        // update this constant to match.
+        const ADMIN_EMAIL = 'admin@senegalinteriordesign.local';
 
         function assertConfigured() {
             const missing = [];
@@ -367,7 +360,7 @@
 
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = usernameToEmail(document.getElementById('login-username').value);
+            const email = ADMIN_EMAIL;
             const password = document.getElementById('login-password').value;
             const btn = document.getElementById('login-btn');
             const errEl = document.getElementById('login-error');
@@ -380,7 +373,7 @@
             btn.disabled = false;
             btn.innerHTML = '<span>Sign In</span>';
             if (error) {
-                errEl.textContent = 'Sign in failed. Check your username and password.';
+                errEl.textContent = 'Incorrect password.';
                 showEl('login-error');
             }
         });
