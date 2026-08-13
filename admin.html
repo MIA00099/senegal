@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Senegal Interior Design</title>
+    <meta name="robots" content="noindex, nofollow">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #2D2A2B;
+            background-image:
+                radial-gradient(circle at 15% 15%, #F5A623 0%, transparent 40%),
+                radial-gradient(circle at 85% 15%, #FFFFFF 0%, transparent 35%),
+                radial-gradient(circle at 85% 85%, #E02020 0%, transparent 40%);
+            background-attachment: fixed;
+            color: #E2E8F0;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border-radius: 1.5rem;
+        }
+
+        .field {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 0.75rem;
+            padding: .75rem 1rem;
+            font-size: .875rem;
+            transition: all 0.25s ease;
+        }
+        .field:focus { outline: none; border-color: rgba(245, 166, 35, 0.5); background: rgba(0, 0, 0, 0.3); }
+        .field::placeholder { color: rgba(255, 255, 255, 0.4); }
+
+        .btn-glow {
+            background: linear-gradient(to right, #F5A623, #F7B733);
+            color: #241F1A;
+            font-weight: 700;
+            transition: all 0.25s ease;
+        }
+        .btn-glow:hover { box-shadow: 0 0 20px rgba(245, 166, 35, 0.4); transform: translateY(-1px); }
+        .btn-glow:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .icon-btn {
+            display: flex; align-items: center; justify-content: center; gap: .4rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: #cbd5e1;
+            transition: all .2s ease;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+        .spinner { border: 2px solid rgba(36,31,26,.3); border-top-color: #241F1A; border-radius: 50%; width: 1rem; height: 1rem; animation: spin .7s linear infinite; display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- ============== LOGIN VIEW ============== -->
+    <div id="login-view" class="min-h-screen flex items-center justify-center px-6 py-12">
+        <div class="w-full max-w-sm glass-panel p-8 relative overflow-hidden">
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#F5A623] rounded-full blur-[100px] opacity-20 pointer-events-none"></div>
+            <div class="relative z-10">
+                <h1 class="text-2xl font-bold text-white tracking-wide text-center">Senegal Interior Design</h1>
+                <p class="text-xs text-[#F5A623] uppercase tracking-widest mt-2 mb-8 text-center font-semibold">Private Admin Panel</p>
+
+                <form id="login-form" class="flex flex-col gap-5">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs uppercase tracking-wider text-gray-400 font-medium">Username</label>
+                        <input type="text" id="login-username" required autocomplete="username" autocapitalize="none" placeholder="admin" class="field">
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs uppercase tracking-wider text-gray-400 font-medium">Password</label>
+                        <input type="password" id="login-password" required autocomplete="current-password" class="field">
+                    </div>
+                    <button type="submit" id="login-btn" class="btn-glow w-full py-3 text-sm uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 mt-2">
+                        <span>Sign In</span>
+                    </button>
+                    <p id="login-error" class="hidden text-sm text-red-400 text-center"></p>
+                </form>
+                <p class="text-center text-xs text-gray-500 mt-8">No public sign-up — accounts are created directly in the Supabase dashboard.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============== DASHBOARD VIEW ============== -->
+    <!-- Fixed to the viewport height on desktop (md+) so the page itself never scrolls —
+         only the catalog list scrolls internally if it gets long. On phones (below md)
+         this intentionally reverts to a normal scrolling page: there's no way to fit a
+         full form + a photo catalog on a small screen without either scrolling or making
+         everything illegibly tiny, so "responsive" here means "stacks and scrolls". -->
+    <div id="dashboard-view" class="hidden md:h-screen md:overflow-hidden flex items-center justify-center p-3 md:p-6">
+        <div class="glass-panel w-full max-w-6xl md:h-full md:max-h-[900px] flex flex-col overflow-hidden relative z-10 p-4 md:p-6">
+
+            <!-- Header -->
+            <div class="w-full flex flex-wrap gap-3 justify-between items-start flex-shrink-0 pb-4 md:pb-6 border-b border-white/10 mb-4 md:mb-6">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-white tracking-wide leading-none">Senegal</h1>
+                    <p class="text-[0.65rem] md:text-xs text-gray-400 uppercase tracking-widest mt-1">Interior Design</p>
+                    <p class="text-[0.65rem] md:text-xs text-[#F5A623] mt-1 font-semibold">ADMIN — PRODUCT CATALOG</p>
+                </div>
+
+                <div class="flex gap-2 items-center flex-wrap">
+                    <div class="relative hidden sm:block">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="text" id="admin-search-input" oninput="filterAdminCatalog(this.value)" placeholder="Search catalog..." class="field pl-10 pr-4 py-2 rounded-full text-sm w-36 focus:w-52 transition-all duration-300">
+                    </div>
+                    <a href="index.html" target="_blank" title="View Site" aria-label="View Site" class="icon-btn h-9 px-3 rounded-full text-xs">
+                        <i class="fas fa-external-link-alt text-xs"></i> <span class="hidden lg:inline">View Site</span>
+                    </a>
+                    <button id="change-password-btn" title="Change Password" aria-label="Change Password" class="icon-btn h-9 px-3 rounded-full text-xs">
+                        <i class="fas fa-key text-xs"></i> <span class="hidden lg:inline">Change Password</span>
+                    </button>
+                    <button id="signout-btn" class="h-9 px-4 rounded-full border border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500 transition-colors text-xs font-medium">
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+
+            <!-- Change Password Modal -->
+            <div id="password-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-6" style="background:rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+                <div class="w-full max-w-sm glass-panel p-8">
+                    <h2 class="text-xl font-semibold text-white mb-1">Change Password</h2>
+                    <p class="text-xs text-gray-400 mb-6">You're already signed in, so no need to enter your current password.</p>
+                    <form id="password-form" class="flex flex-col gap-5">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-xs uppercase tracking-wider text-gray-400 font-medium">New Password</label>
+                            <input type="password" id="new-password" required minlength="8" autocomplete="new-password" class="field">
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="text-xs uppercase tracking-wider text-gray-400 font-medium">Confirm New Password</label>
+                            <input type="password" id="confirm-password" required minlength="8" autocomplete="new-password" class="field">
+                        </div>
+                        <p class="text-xs text-gray-500">At least 8 characters.</p>
+                        <div class="flex items-center gap-3 pt-1">
+                            <button type="submit" id="password-submit-btn" class="btn-glow flex-1 py-3 text-xs uppercase tracking-widest rounded-xl">Update Password</button>
+                            <button type="button" id="password-cancel-btn" class="text-xs uppercase tracking-widest text-gray-400 hover:text-white px-3">Cancel</button>
+                        </div>
+                        <p id="password-form-msg" class="hidden text-sm"></p>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Body: two columns on desktop (fills remaining height, only inner areas scroll), stacked + page-scrolling on mobile -->
+            <div class="flex-1 md:min-h-0 flex flex-col md:flex-row gap-6 md:gap-10">
+
+                <!-- Left Column: Add Product Form -->
+                <div class="w-full md:w-5/12 flex flex-col md:min-h-0 relative">
+                    <h2 class="text-xl font-semibold text-white mb-4 flex-shrink-0" id="form-heading">Add a Product</h2>
+
+                    <form id="product-form" class="flex flex-col gap-4 md:overflow-y-auto md:pr-2 md:min-h-0">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-xs uppercase tracking-wider text-gray-400 font-medium">Product Name <span class="text-red-400">*</span></label>
+                            <input type="text" id="p-name" required placeholder="e.g. Bouclé Curves Sofa" class="field">
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <label class="text-xs uppercase tracking-wider text-gray-400 font-medium">Category <span class="text-red-400">*</span></label>
+                            <select id="p-category" required class="field appearance-none cursor-pointer">
+                                <option value="" disabled selected class="text-gray-900 bg-gray-200">Select a category...</option>
+                            </select>
+                            <div class="flex gap-2 mt-1">
+                                <input type="text" id="new-category-name" placeholder="New category name (e.g. Outdoor)" class="field flex-1 py-2 text-xs">
+                                <button type="button" id="add-category-btn" class="icon-btn px-4 py-2 rounded-xl text-sm whitespace-nowrap">
+                                    <i class="fas fa-plus text-xs"></i> Add
+                                </button>
+                            </div>
+                            <p id="category-form-msg" class="hidden text-xs mt-1"></p>
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <label class="text-xs uppercase tracking-wider text-gray-400 font-medium">Description</label>
+                            <textarea id="p-description" rows="2" placeholder="Materials, dimensions, finish, price range..." class="field resize-none"></textarea>
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <label class="text-xs uppercase tracking-wider text-gray-400 font-medium">Product Photo <span class="text-red-400">*</span></label>
+                            <div class="relative">
+                                <input type="file" id="p-image" accept="image/*" class="hidden">
+                                <label for="p-image" class="field flex items-center gap-3 cursor-pointer hover:bg-black/30 transition-colors">
+                                    <span class="px-3 py-1 bg-white/10 rounded-md text-xs font-medium border border-white/10 flex-shrink-0">Browse...</span>
+                                    <span id="p-image-filename" class="text-gray-400 text-sm truncate">No file selected.</span>
+                                </label>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-relaxed">Uploaded to ImgBB and hosted permanently — leave empty when editing to keep the current photo.</p>
+                            <img id="p-image-preview" class="hidden mt-1 h-24 w-full object-cover rounded-xl border border-white/10">
+                        </div>
+
+                        <div class="flex items-center gap-3 pt-1 pb-1">
+                            <button type="submit" id="product-submit-btn" class="btn-glow flex-1 py-3 text-sm uppercase tracking-widest rounded-xl flex items-center justify-center gap-2">
+                                <span id="product-submit-text">Add Product</span>
+                            </button>
+                            <button type="button" id="cancel-edit-btn" class="hidden text-xs uppercase tracking-widest text-gray-400 hover:text-white px-3">Cancel</button>
+                        </div>
+                        <p id="product-form-msg" class="hidden text-sm pb-1"></p>
+                    </form>
+                </div>
+
+                <!-- Divider -->
+                <div class="hidden md:block w-px bg-gradient-to-b from-transparent via-white/10 to-transparent"></div>
+
+                <!-- Right Column: Live Catalog -->
+                <div class="w-full md:w-7/12 flex flex-col md:min-h-0">
+                    <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                        <h2 class="text-xl font-semibold text-white">Live Catalog <span class="text-[#F5A623] font-normal">(<span id="product-count">0</span>)</span></h2>
+                    </div>
+
+                    <div class="flex-1 md:min-h-0 bg-black/20 rounded-2xl border border-white/5 p-4 md:p-6 overflow-y-auto">
+                        <div id="product-list" class="flex flex-col gap-3">
+                            <p class="text-gray-500 text-sm">Loading products…</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Public config (Supabase URL + anon key) shared with index.html -->
+    <script src="config.js"></script>
+    <!-- Admin-only config (ImgBB key) — never loaded on the public site -->
+    <script src="admin-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // The 5 categories already built into the public site. The admin can add
+        // more from the form below — those get stored in Supabase and picked up
+        // by both this dropdown and the live site automatically.
+        const BUILTIN_CATEGORIES = [
+            { slug: 'sofas', label: 'Sofas & Seating' },
+            { slug: 'media', label: 'Media Walls & TV Stands' },
+            { slug: 'wardrobes', label: 'Wardrobes & Storage' },
+            { slug: 'dining', label: 'Dining' },
+            { slug: 'kitchens', label: 'Kitchens & Interiors' }
+        ];
+        let allCategories = BUILTIN_CATEGORIES.slice();
+
+        function categoryLabel(slug) {
+            const found = allCategories.find(c => c.slug === slug);
+            return found ? found.label : slug;
+        }
+
+        function slugify(text) {
+            return text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-+|-+$)/g, '');
+        }
+
+        let supa = null;
+        let editingId = null;
+        let cachedProducts = [];
+
+        // Supabase Auth needs an email under the hood, but the login screen only
+        // asks for a plain "Username" (e.g. "admin"). This fixed, never-emailed
+        // domain turns that into a valid-looking email Supabase will accept —
+        // you never see or type this part yourself.
+        const USERNAME_DOMAIN = 'senegalinteriordesign.local';
+        function usernameToEmail(username) {
+            const trimmed = username.trim().toLowerCase();
+            return trimmed.includes('@') ? trimmed : trimmed + '@' + USERNAME_DOMAIN;
+        }
+
+        function assertConfigured() {
+            const missing = [];
+            if (!window.SUPABASE_URL) missing.push('SUPABASE_URL');
+            if (!window.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY.indexOf('PASTE_') === 0) missing.push('SUPABASE_ANON_KEY (config.js)');
+            if (!window.IMGBB_API_KEY) missing.push('IMGBB_API_KEY (admin-config.js)');
+            if (missing.length) {
+                document.body.innerHTML =
+                    '<div class="min-h-screen flex items-center justify-center px-6 text-center">' +
+                    '<div class="glass-panel p-10 max-w-md"><h1 class="text-2xl font-bold text-white mb-3">Setup needed</h1>' +
+                    '<p class="text-gray-400">Missing: ' + missing.join(', ') + '. Add these in config.js / admin-config.js before the admin panel can connect.</p></div></div>';
+                return false;
+            }
+            return true;
+        }
+
+        function showEl(id) { document.getElementById(id).classList.remove('hidden'); }
+        function hideEl(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function showLogin() {
+            showEl('login-view');
+            document.getElementById('dashboard-view').classList.add('hidden');
+        }
+        function showDashboard() {
+            document.getElementById('login-view').classList.add('hidden');
+            showEl('dashboard-view');
+            loadCategories();
+            loadProducts();
+        }
+
+        // --- Categories ---
+        async function loadCategories() {
+            const { data, error } = await supa.from('categories').select('slug,label').order('sort_order', { ascending: true });
+            if (!error && data) {
+                const extra = data.filter(c => !BUILTIN_CATEGORIES.some(b => b.slug === c.slug));
+                allCategories = BUILTIN_CATEGORIES.concat(extra);
+            }
+            const select = document.getElementById('p-category');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="" disabled' + (currentValue ? '' : ' selected') + ' class="text-gray-900 bg-gray-200">Select a category...</option>' +
+                allCategories.map(c => '<option value="' + c.slug + '"' + (c.slug === currentValue ? ' selected' : '') + ' class="text-gray-900 bg-white">' + escapeHtml(c.label) + '</option>').join('');
+        }
+
+        document.getElementById('add-category-btn').addEventListener('click', async () => {
+            const input = document.getElementById('new-category-name');
+            const msg = document.getElementById('category-form-msg');
+            const label = input.value.trim();
+            hideEl('category-form-msg');
+
+            if (!label) return;
+            const slug = slugify(label);
+            if (!slug) {
+                msg.textContent = 'Please enter a valid category name.';
+                msg.className = 'text-xs mt-1 text-red-400';
+                showEl('category-form-msg');
+                return;
+            }
+            if (allCategories.some(c => c.slug === slug)) {
+                msg.textContent = 'That category already exists — pick it from the dropdown above.';
+                msg.className = 'text-xs mt-1 text-red-400';
+                showEl('category-form-msg');
+                return;
+            }
+
+            const { error } = await supa.from('categories').insert({ slug, label, sort_order: allCategories.length + 1 });
+            if (error) {
+                msg.textContent = 'Could not add category: ' + error.message;
+                msg.className = 'text-xs mt-1 text-red-400';
+                showEl('category-form-msg');
+                return;
+            }
+
+            input.value = '';
+            await loadCategories();
+            document.getElementById('p-category').value = slug;
+            msg.textContent = '"' + label + '" added — it now has its own section on the live site.';
+            msg.className = 'text-xs mt-1 text-green-400';
+            showEl('category-form-msg');
+        });
+
+        // --- Auth ---
+        async function initAuth() {
+            const { data: { session } } = await supa.auth.getSession();
+            session ? showDashboard() : showLogin();
+
+            supa.auth.onAuthStateChange((_event, session) => {
+                session ? showDashboard() : showLogin();
+            });
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = usernameToEmail(document.getElementById('login-username').value);
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-btn');
+            const errEl = document.getElementById('login-error');
+            hideEl('login-error');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>';
+
+            const { error } = await supa.auth.signInWithPassword({ email, password });
+
+            btn.disabled = false;
+            btn.innerHTML = '<span>Sign In</span>';
+            if (error) {
+                errEl.textContent = 'Sign in failed. Check your username and password.';
+                showEl('login-error');
+            }
+        });
+
+        document.getElementById('signout-btn').addEventListener('click', async () => {
+            await supa.auth.signOut();
+        });
+
+        // --- Change Password ---
+        document.getElementById('change-password-btn').addEventListener('click', () => {
+            document.getElementById('password-form').reset();
+            hideEl('password-form-msg');
+            showEl('password-modal');
+        });
+        document.getElementById('password-cancel-btn').addEventListener('click', () => hideEl('password-modal'));
+
+        document.getElementById('password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const msg = document.getElementById('password-form-msg');
+            const btn = document.getElementById('password-submit-btn');
+
+            if (newPassword !== confirmPassword) {
+                msg.textContent = 'Those two passwords don\'t match.';
+                msg.className = 'text-sm text-red-400';
+                msg.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Updating…';
+            const { error } = await supa.auth.updateUser({ password: newPassword });
+            btn.disabled = false;
+            btn.textContent = 'Update Password';
+
+            if (error) {
+                msg.textContent = error.message || 'Could not update password.';
+                msg.className = 'text-sm text-red-400';
+                msg.classList.remove('hidden');
+                return;
+            }
+
+            msg.textContent = 'Password updated. Use your new password next time you sign in.';
+            msg.className = 'text-sm text-green-400';
+            msg.classList.remove('hidden');
+            setTimeout(() => hideEl('password-modal'), 1800);
+        });
+
+        // --- Image preview ---
+        document.getElementById('p-image').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const preview = document.getElementById('p-image-preview');
+            const filenameEl = document.getElementById('p-image-filename');
+            if (!file) {
+                preview.classList.add('hidden');
+                filenameEl.textContent = 'No file selected.';
+                filenameEl.classList.add('text-gray-400');
+                filenameEl.classList.remove('text-white');
+                return;
+            }
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+            filenameEl.textContent = file.name;
+            filenameEl.classList.remove('text-gray-400');
+            filenameEl.classList.add('text-white');
+        });
+
+        // --- ImgBB upload ---
+        async function uploadToImgBB(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+            const res = await fetch('https://api.imgbb.com/1/upload?key=' + window.IMGBB_API_KEY, {
+                method: 'POST',
+                body: formData
+            });
+            const json = await res.json();
+            if (!res.ok || !json.success) throw new Error((json.error && json.error.message) || 'Image upload failed');
+            return json.data.url;
+        }
+
+        // --- Product form submit (add or update) ---
+        document.getElementById('product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('product-submit-btn');
+            const submitText = document.getElementById('product-submit-text');
+            const msg = document.getElementById('product-form-msg');
+            msg.classList.add('hidden');
+
+            const name = document.getElementById('p-name').value.trim();
+            const category = document.getElementById('p-category').value;
+            const description = document.getElementById('p-description').value.trim();
+            const file = document.getElementById('p-image').files[0];
+
+            if (!name || !category) return;
+            if (!file && !editingId) {
+                msg.textContent = 'Please choose a photo.';
+                msg.className = 'text-sm text-red-400';
+                msg.classList.remove('hidden');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitText.textContent = file ? 'Uploading photo…' : 'Saving…';
+
+            try {
+                let imageUrl = editingId ? (cachedProducts.find(p => p.id === editingId) || {}).image_url : null;
+                if (file) imageUrl = await uploadToImgBB(file);
+
+                const payload = { name, category, description, image_url: imageUrl };
+
+                if (editingId) {
+                    const { error } = await supa.from('products').update(payload).eq('id', editingId);
+                    if (error) throw error;
+                } else {
+                    const { error } = await supa.from('products').insert(payload);
+                    if (error) throw error;
+                }
+
+                resetProductForm();
+                msg.textContent = editingId ? 'Product updated.' : 'Product added to the live site.';
+                msg.className = 'text-sm text-green-400';
+                msg.classList.remove('hidden');
+                editingId = null;
+                loadProducts();
+            } catch (err) {
+                msg.textContent = err.message || 'Something went wrong saving this product.';
+                msg.className = 'text-sm text-red-400';
+                msg.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitText.textContent = editingId ? 'Update Product' : 'Add Product';
+            }
+        });
+
+        function resetProductForm() {
+            document.getElementById('product-form').reset();
+            document.getElementById('p-image-preview').classList.add('hidden');
+            document.getElementById('p-image-filename').textContent = 'No file selected.';
+            document.getElementById('p-image-filename').classList.add('text-gray-400');
+            document.getElementById('p-image-filename').classList.remove('text-white');
+            document.getElementById('form-heading').textContent = 'Add a Product';
+            document.getElementById('product-submit-text').textContent = 'Add Product';
+            hideEl('cancel-edit-btn');
+            editingId = null;
+        }
+
+        document.getElementById('cancel-edit-btn').addEventListener('click', resetProductForm);
+
+        // --- Product list ---
+        async function loadProducts() {
+            const { data, error } = await supa.from('products').select('*').order('created_at', { ascending: false });
+            const listEl = document.getElementById('product-list');
+            if (error) {
+                listEl.innerHTML = '<p class="text-red-400 text-sm">Could not load products: ' + escapeHtml(error.message) + '</p>';
+                return;
+            }
+            cachedProducts = data || [];
+            document.getElementById('product-count').textContent = cachedProducts.length;
+            const searchInput = document.getElementById('admin-search-input');
+            if (searchInput) searchInput.value = '';
+            renderProductList(cachedProducts);
+        }
+
+        function renderProductList(list) {
+            const listEl = document.getElementById('product-list');
+
+            if (!cachedProducts.length) {
+                listEl.innerHTML =
+                    '<div class="flex-1 flex flex-col items-center justify-center text-center text-gray-500 py-12">' +
+                    '<div class="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4"><i class="fas fa-couch text-2xl text-gray-600"></i></div>' +
+                    '<p class="text-sm">No products yet — add your first one on the left.</p></div>';
+                return;
+            }
+            if (!list.length) {
+                listEl.innerHTML = '<p class="text-gray-500 text-sm text-center py-12">No products match your search.</p>';
+                return;
+            }
+
+            listEl.innerHTML = '';
+            list.forEach(p => {
+                const row = document.createElement('div');
+                row.className = 'glass-panel p-4 flex gap-4 items-center group hover:bg-white/10 transition-colors rounded-xl border border-white/5 hover:border-white/20';
+                row.innerHTML =
+                    '<div class="w-16 h-16 rounded-lg bg-black/50 flex-shrink-0 overflow-hidden border border-white/10">' +
+                    '<img src="' + escapeHtml(p.image_url) + '" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="">' +
+                    '</div>' +
+                    '<div class="flex-1 min-w-0">' +
+                    '<h3 class="text-white font-medium truncate">' + escapeHtml(p.name) + '</h3>' +
+                    '<p class="text-xs text-[#F5A623] uppercase tracking-wider mt-1">' + escapeHtml(categoryLabel(p.category)) + '</p>' +
+                    '</div>' +
+                    '<div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">' +
+                    '<button data-id="' + p.id + '" class="edit-btn w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-gray-300 transition-colors" aria-label="Edit"><i class="fas fa-pen text-xs"></i></button>' +
+                    '<button data-id="' + p.id + '" class="delete-btn w-8 h-8 rounded-full bg-red-500/10 hover:bg-red-500/30 text-red-400 flex items-center justify-center transition-colors" aria-label="Delete"><i class="fas fa-trash text-xs"></i></button>' +
+                    '</div>';
+                listEl.appendChild(row);
+            });
+
+            listEl.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', () => startEdit(btn.dataset.id)));
+            listEl.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => deleteProduct(btn.dataset.id)));
+        }
+
+        function filterAdminCatalog(query) {
+            const q = query.trim().toLowerCase();
+            if (!q) { renderProductList(cachedProducts); return; }
+            renderProductList(cachedProducts.filter(p =>
+                (p.name || '').toLowerCase().includes(q) || categoryLabel(p.category).toLowerCase().includes(q)
+            ));
+        }
+
+        function startEdit(id) {
+            const p = cachedProducts.find(x => x.id === id);
+            if (!p) return;
+            editingId = id;
+            document.getElementById('p-name').value = p.name || '';
+            document.getElementById('p-category').value = p.category || '';
+            document.getElementById('p-description').value = p.description || '';
+            document.getElementById('p-image').value = '';
+            document.getElementById('p-image-filename').textContent = 'Keeping current photo — choose a new file to replace it.';
+            const preview = document.getElementById('p-image-preview');
+            preview.src = p.image_url;
+            preview.classList.remove('hidden');
+            document.getElementById('form-heading').textContent = 'Edit Product';
+            document.getElementById('product-submit-text').textContent = 'Update Product';
+            showEl('cancel-edit-btn');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Remove this product from the live site?')) return;
+            const { error } = await supa.from('products').delete().eq('id', id);
+            if (error) { alert('Could not delete: ' + error.message); return; }
+            if (editingId === id) resetProductForm();
+            loadProducts();
+        }
+
+        function escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value == null ? '' : String(value);
+            return div.innerHTML;
+        }
+
+        // --- Boot ---
+        if (assertConfigured()) {
+            supa = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+            initAuth();
+        }
+    </script>
+</body>
+</html>

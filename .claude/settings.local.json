@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp index.html index.html.bak)",
+      "Bash(sed -i -e 's/Fine Furniture \\\\& Interior Design/Senegal Interior Design/g' -e 's/Fine Furniture and Interior Design/Senegal Interior Design/g' -e 's/Fine Furniture/Senegal Interior Design/g' -e s/fine_furniture_and_interior_d/senegal_interiol_designer/g -e s/250783483074/250789605715/g -e 's/+250 783 483 074/+250 789 605 715/g' -e 's#https://www.finefurniture.rw/#https://www.senegalinteriordesign.com/#g' index.html)",
+      "Bash(node _dev-server.cjs)",
+      "Bash(node -e ' *)",
+      "Bash(sed -E -i 's#h-\\\\[\\(450|500|550|600\\)px\\\\]\\( lg:col-span-2\\)? img-hover-zoom#aspect-[4/5] img-hover-zoom#g' index.html)",
+      "Bash(sed -i 's#class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\"#class=\"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6\"#g' index.html)",
+      "Bash(sed -i 's#class=\"grid grid-cols-1 md:grid-cols-2 gap-6\"#class=\"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6\"#g' index.html)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8090/admin.html)",
+      "Bash(git --version)",
+      "Bash(gh --version)",
+      "Bash(gh auth *)",
+      "Read(//c/Users/Administrator/**)",
+      "Bash(git config *)",
+      "Bash(gh api *)",
+      "Bash(gh repo *)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'Senegal Interior Design — full site with admin panel *)"
+    ]
+  }
+}
